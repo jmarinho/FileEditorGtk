@@ -13,23 +13,20 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 import fileList
+from gi.repository import GtkSource 
 
 win = Gtk.Window(title="mainWindow")
 win.connect("delete-event", Gtk.main_quit)
 
-fileList = Gtk.TreeStore(str)
-firstFile = fileList.append(None,["abc"])
-fileList.append(firstFile,["sun"])
+treeView = fileList.FileList(".")
+box = Gtk.Box(spacing = 10)
+box.pack_start(treeView, True, True, 0)
 
-fileList.append(None,["def"])
+sourceViewer = GtkSource.View()
+box.pack_start(sourceViewer, True, True, 0)
 
-treeView = Gtk.TreeView(fileList)
-renderer = Gtk.CellRendererText()
-column = Gtk.TreeViewColumn("File", renderer, text=0)
-treeView.append_column(column)
 
-win.add(treeView)
+win.add(box)
 
-treeView.show()
 win.show_all()
 Gtk.main()
