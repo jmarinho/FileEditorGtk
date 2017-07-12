@@ -18,15 +18,16 @@ from gi.repository import GtkSource
 win = Gtk.Window(title="mainWindow")
 win.connect("delete-event", Gtk.main_quit)
 
-treeView = fileList.FileList(".")
+sourceViewer = GtkSource.View()
+treeView = fileList.FileList(".", sourceViewer)
 box = Gtk.Box(spacing = 10)
 box.pack_start(treeView, True, True, 0)
 
-sourceViewer = GtkSource.View()
 box.pack_start(sourceViewer, True, True, 0)
 
-
-win.add(box)
+scrollWindow1 = Gtk.ScrolledWindow()
+scrollWindow1.add(box)
+win.add(scrollWindow1)
 
 win.show_all()
 Gtk.main()

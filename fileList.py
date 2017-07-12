@@ -14,16 +14,16 @@ class FileList(Gtk.TreeView):
     def buttonCallback(self, path, view_column , userPar):
         pdb.Pdb.complete= rlcompleter.Completer(locals()).complete
         pdb.set_trace()
-        print path
-        print view_column
+        print self.fileTable[view_column.to_string()]
 
-    def __init__(self, mainDirectory):
+    def __init__(self, mainDirectory, sourceViewer):
         Gtk.TreeView.__init__(self)
 
         fileList = Gtk.TreeStore(str)
+        self.sourceViewer = sourceViewer
 
         dirHash = {}
-
+        self.fileTable = {}
         for root, dirs, files in os.walk(mainDirectory, topdown = True):
             
             print "iteration"
@@ -33,7 +33,9 @@ class FileList(Gtk.TreeView):
                 else:
                     parent = None
                 lbl = name
-                fileList.append(parent,[lbl])
+                fileIter = fileList.append(parent,[lbl])
+                pathStr = fileList.get_string_from_iter(fileIter)
+                self.fileTable[pathStr] = os.path.join(root, name)
                 print (os.path.join(root, name))
 
             for name in dirs:
