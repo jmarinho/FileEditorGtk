@@ -6,15 +6,23 @@ import os
 import rlcompleter
 import pdb
 
+from gi.repository import GtkSource 
+from gi.repository import Gio 
+
 pdb.Pdb.complete= rlcompleter.Completer(locals()).complete
 
 
 class FileList(Gtk.TreeView):
 
     def buttonCallback(self, path, view_column , userPar):
-        pdb.Pdb.complete= rlcompleter.Completer(locals()).complete
-        pdb.set_trace()
-        print self.fileTable[view_column.to_string()]
+        #pdb.Pdb.complete= rlcompleter.Completer(locals()).complete
+        #pdb.set_trace()
+
+        fileName = self.fileTable[view_column.to_string()]
+        bufferText = self.sourceViewer.get_buffer()
+        bufferText.set_text(open(fileName).readlines())
+
+        print fileName
 
     def __init__(self, mainDirectory, sourceViewer):
         Gtk.TreeView.__init__(self)

@@ -19,6 +19,8 @@ win = Gtk.Window(title="mainWindow")
 win.connect("delete-event", Gtk.main_quit)
 
 sourceViewer = GtkSource.View()
+
+
 treeView = fileList.FileList(".", sourceViewer)
 box = Gtk.Box(spacing = 10)
 box.pack_start(treeView, True, True, 0)
