@@ -27,7 +27,7 @@ class FileList(Gtk.TreeView):
     def __init__(self, mainDirectory, sourceViewer):
         Gtk.TreeView.__init__(self)
 
-        fileList = Gtk.TreeStore(str)
+        fileList = Gtk.TreeStore(Gtk.Box)
         self.sourceViewer = sourceViewer
 
         dirHash = {}
