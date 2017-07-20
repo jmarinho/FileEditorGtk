@@ -22,11 +22,15 @@ class FileList(Gtk.TreeView):
         bufferText = self.sourceViewer.get_buffer()
         bufferText.set_text(open(fileName).read())
 
+        self.tabs.append_page(self.sourceViewer)
+        self.tabs.show()
+        self.sourceViewer.show()
+
         print fileName
 
-    def __init__(self, mainDirectory, sourceViewer):
+    def __init__(self, mainDirectory, sourceViewer, tabs):
         Gtk.TreeView.__init__(self)
-
+        self.tabs = tabs
         fileList = Gtk.TreeStore(str)
         self.sourceViewer = sourceViewer
 

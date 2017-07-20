@@ -19,17 +19,22 @@ win = Gtk.Window(title="mainWindow")
 win.connect("delete-event", Gtk.main_quit)
 
 sourceViewer = GtkSource.View()
+sourceViewer.set_show_line_numbers(True)
 
+tabs = Gtk.Notebook()
 
-treeView = fileList.FileList(".", sourceViewer)
+treeView = fileList.FileList(".", sourceViewer, tabs)
 box = Gtk.Box(spacing = 10)
-box.pack_start(treeView, True, True, 0)
 
-box.pack_start(sourceViewer, True, True, 0)
 
 scrollWindow1 = Gtk.ScrolledWindow()
-scrollWindow1.add(box)
-win.add(scrollWindow1)
+scrollWindow1.add(treeView)
+scrollWindow1.set_size_request(200,500)
 
+box.pack_start(scrollWindow1, True, True, 0)
+box.pack_start(tabs, True, True, 0)
+win.add(box)
+
+win.resize(500,1000)
 win.show_all()
 Gtk.main()
