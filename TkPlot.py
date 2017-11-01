@@ -108,6 +108,7 @@ class PlotGraph:
         endY = max(self.startY, mouseEvent.ydata)
 
         self.subPlot.set_xlim([startX, endX]) 
+        self.subPlot.set_ylim([startY, endY]) 
         self.canvas.draw()
 
 mainWin = Tk()
