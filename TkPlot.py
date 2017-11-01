@@ -21,8 +21,8 @@ class PlotGraph:
         self.figure = Figure(dpi=100)
         self.subPlot = self.figure.add_subplot(111) # returns the axes
 
-        self.dataXRange
-        self.dataYXRange
+        self.dataXRange = None
+        self.dataYXRange = None
 
         inputData = json.load(open(json_file_name, "r"))
 
@@ -35,6 +35,8 @@ class PlotGraph:
         for index,item in enumerate(data):
             self.x[index] = item[0]
             self.y[index] = item[1]
+        self.dataXRange = [float(min(self.x)), float(max(self.x))]
+        self.dataYRange = [float(min(self.y)), float(max(self.y))]
 
         self.subPlot.plot(self.x, self.y)
 
@@ -52,19 +54,52 @@ class PlotGraph:
         return float(tupleVariable[0])
 
     def motionHandler(self, mouseEvent):
-        print "motion {0}+, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
+        print "motion {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
 
     def scrollHandler(self, mouseEvent):
-        print "scroll {0}+, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
+        print "scroll {0}, {1}, steps {2}".format(mouseEvent.xdata, mouseEvent.ydata, mouseEvent.step)
+        zoomInRatio  = 0.9
+        zoomOutRatio = 1.1
 
+        xlim = self.subPlot.get_xlim()
+        ylim = self.subPlot.get_ylim()
+
+        currX = mouseEvent.xdata
+        currY = mouseEvent.ydata
+
+        distXLow  = currX-xlim[0]
+        distXHigh = xlim[1]-currX
+        distYLow  = currY-ylim[0]
+        distYHigh = ylim[1]-currY
+
+        if(mouseEvent.step<0):
+            distXLow  *= zoomOutRatio
+            distXHigh *= zoomOutRatio
+            distYLow  *= zoomOutRatio
+            distYHigh *= zoomOutRatio
+
+        else:
+            distXLow  *= zoomInRatio
+            distXHigh *= zoomInRatio
+            distYLow  *= zoomInRatio
+            distYHigh *= zoomInRatio
+
+        xlim = (currX- distXLow, currX+distXHigh )
+        ylim = (currY- distYLow, currY+distYHigh )
+ 
+        self.subPlot.set_xlim(xlim)
+        self.subPlot.set_ylim(ylim)
+        self.canvas.draw()
+
+    
     def buttonPressHandler(self, mouseEvent):
         self.startX = mouseEvent.xdata
         self.startY = mouseEvent.ydata
         
-        print "press {0}+, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
+        print "press {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
 
     def buttonReleaseHandler(self, mouseEvent):
-        print "release {0}+, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
+        print "release {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
     
         startX = min(self.startX, mouseEvent.xdata)
         startY = min(self.startY, mouseEvent.ydata)
