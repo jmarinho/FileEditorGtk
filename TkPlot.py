@@ -71,7 +71,7 @@ class PlotGraph:
         distXHigh = xlim[1]-currX
         distYLow  = currY-ylim[0]
         distYHigh = ylim[1]-currY
-
+        
         if(mouseEvent.step<0):
             distXLow  *= zoomOutRatio
             distXHigh *= zoomOutRatio
@@ -95,6 +95,8 @@ class PlotGraph:
     def buttonPressHandler(self, mouseEvent):
         self.startX = mouseEvent.xdata
         self.startY = mouseEvent.ydata
+
+        self.mainWindow.config(cursor="cross")
         
         print "press {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
 
@@ -110,6 +112,7 @@ class PlotGraph:
         self.subPlot.set_xlim([startX, endX]) 
         self.subPlot.set_ylim([startY, endY]) 
         self.canvas.draw()
+        self.mainWindow.config(cursor="arrow")
 
 mainWin = Tk()
 
