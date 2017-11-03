@@ -38,10 +38,11 @@ class PlotGraph:
         self.dataXRange = [float(min(self.x)), float(max(self.x))]
         self.dataYRange = [float(min(self.y)), float(max(self.y))]
 
-        self.subPlot.plot(self.x, self.y)
+        self.subPlot.plot(self.x, self.y, picker=True)
 
         # a tk.DrawingArea
         self.canvas = FigureCanvasTkAgg(self.figure, master=mainWin)
+        self.canvas.mpl_connect("pick_event", self.pickHandler)
         self.canvas.mpl_connect("motion_notify_event", self.motionHandler)
         self.canvas.mpl_connect("scroll_event", self.scrollHandler)
         self.canvas.mpl_connect("button_press_event", self.buttonPressHandler)
@@ -113,6 +114,9 @@ class PlotGraph:
         self.subPlot.set_ylim([startY, endY]) 
         self.canvas.draw()
         self.mainWindow.config(cursor="arrow")
+
+    def pickHandler(self, mouseEvent):
+        print "pick handler"
 
 mainWin = Tk()
 
