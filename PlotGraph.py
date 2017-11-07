@@ -12,8 +12,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 # Responsible for 
 class PlotGraph:
 
-    def __init__(self, mainWindow):
-        self.mainWindow = mainWindow
+    def __init__(self, parentWindow):
+        self.mainWindow = parentWindow
         
         ## Input file name just beng used for debug sake
         self.figure = Figure(dpi=100)
@@ -25,7 +25,7 @@ class PlotGraph:
             fill=False, visible=False, animated=False, zorder=100))
 
         # a tk.DrawingArea
-        self.canvas = FigureCanvasTkAgg(self.figure, master=mainWindow)
+        self.canvas = FigureCanvasTkAgg(self.figure, master=parentWindow)
         self.canvas.mpl_connect("pick_event", self.pickHandler)
         self.canvas.mpl_connect("motion_notify_event", self.motionHandler)
         self.canvas.mpl_connect("scroll_event", self.scrollHandler)
@@ -33,11 +33,16 @@ class PlotGraph:
         self.canvas.mpl_connect("button_release_event", self.buttonReleaseHandler)
         self.canvas.show()
         self.canvas.get_tk_widget().pack( expand=1)
+    
+    def enableData(self, enabledArray):
+        for name in enabledArray:
+            if name in self.dataList:
+                data = self.dataList[name] 
+                self.subPlot.plot(data.x, data.y, picker=True)
+        self.canvas.draw()
 
     def setData(self, dataList):
-        for data in dataList:
-            self.subPlot.plot(data.x, data.y, picker=True)
-
+        self.dataList = dataList
 
     def motionHandler(self, mouseEvent):
         print "motion {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
