@@ -24,6 +24,9 @@ class PlotGraph:
         self.zoomRectangle = self.subPlot.add_patch(patches.Rectangle( (0, 0), 1.0, 1.0,
             fill=False, visible=False, animated=False, zorder=100))
 
+        self.startX = 0
+        self.startY = 0
+
         # a tk.DrawingArea
         self.canvas = FigureCanvasTkAgg(self.figure, master=parentWindow)
         self.canvas.mpl_connect("pick_event", self.pickHandler)
@@ -35,22 +38,28 @@ class PlotGraph:
         self.canvas.get_tk_widget().pack( expand=1)
     
     def enableData(self, enabledArray):
+        self.subPlot.cla()
+        self.zoomRectangle = self.subPlot.add_patch(patches.Rectangle( (0, 0), 1.0, 1.0,
+            fill=False, visible=False, animated=False, zorder=100))
+
         for name in enabledArray:
             if name in self.dataList:
                 data = self.dataList[name] 
-                self.subPlot.plot(data.x, data.y, picker=True)
+                #self.subPlot.plot(data.x, data.y,linewidth=0.5, picker=True)
+                self.subPlot.stackplot(data.x, data.y)
         self.canvas.draw()
 
     def setData(self, dataList):
         self.dataList = dataList
 
     def motionHandler(self, mouseEvent):
-        print "motion {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
+        #print "motion {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
 
-        self.zoomRectangle.set_width(mouseEvent.xdata - self.startX)
-        self.zoomRectangle.set_height(mouseEvent.ydata - self.startY)
+        if self.startX:
+            self.zoomRectangle.set_width(mouseEvent.xdata - self.startX)
+            self.zoomRectangle.set_height(mouseEvent.ydata - self.startY)
 
-        self.canvas.draw()
+            self.canvas.draw()
 
     def scrollHandler(self, mouseEvent):
         print "scroll {0}, {1}, steps {2}".format(mouseEvent.xdata, mouseEvent.ydata, mouseEvent.step)

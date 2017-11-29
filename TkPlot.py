@@ -1,7 +1,8 @@
 import json
 import pdb
-
 import PlotGraph
+import WidgetTreeViewTk 
+from string import *
 from Tkinter import *
 
 class Data:
@@ -18,24 +19,38 @@ class WrapperGraph(Frame):
     def __init__(self, mainWindow):
         self.mainWindow = mainWindow
 
-        graphFrame = Frame(mainWindow)
-        graphFrame.pack()
+        self.TreeSelector = WidgetTreeViewTk.WidgetTreeViewTk(mainWindow)
+        self.graphFrame = Frame(mainWindow)
+        self.graphFrame.pack()
         self.nameList, self.dataList = self.openFile("plotInput.json") 
-        self.graph = PlotGraph.PlotGraph(graphFrame)
+        self.graph = PlotGraph.PlotGraph(self.graphFrame)
         self.graph.setData(self.dataList)
 
-        toggleFrame = Frame(graphFrame)
-        toggleFrame.pack()
+        self.handleResize()
+        
+    def handleResize(self):
+        self.toggleFrame = Frame(self.graphFrame)
+        self.toggleFrame.pack()
 
         self.buttonList = []
         self.checkerArray = {}
-        index = 0
         for nameElem in self.nameList:
             self.checkerArray[nameElem] = IntVar()
-            self.buttonList.append(Checkbutton(toggleFrame, text=nameElem,
+            self.buttonList.append(Checkbutton(self.toggleFrame, text=split(nameElem,"/")[-1],
                 command=self.handleToggle, variable=self.checkerArray[nameElem], offvalue=0, onvalue=1))
-            self.buttonList[-1].grid(column=index, row=1)
-            index += 1
+
+        indexR = 0
+        indexC = 0
+        for button in self.buttonList:
+            button.grid(sticky = 'W', row = indexR, column = indexC)
+            indexC += 1
+            if( indexC>3):
+                indexC = 0
+                indexR += 1
+
+        for button in self.buttonList:
+            button.update()
+            #print self.buttonList[-1].winfo_width()
 
         self.handleToggle()
 
@@ -56,8 +71,8 @@ class WrapperGraph(Frame):
             y = [0]*dataLen
 
             for index,item in enumerate(data):
-                x[index] = item[0]
-                y[index] = item[1]
+                x[index] = float(item[0])
+                y[index] = float(item[1])
 
             dataList[components] = Data(components, x, y)
             nameList.append(components)
@@ -75,16 +90,16 @@ class WrapperGraph(Frame):
         for name, val in self.checkerArray.items():
             if val.get() == 1:
                 enabledNames.append(name)
-        self.graph.enableData(enabledNames)            
+        self.graph.enableData(enabledNames)
 
+# Create Main Window
 mainWin = Tk()
 
+# The widget that wraps the main plotting widget,
+# plot selection buttons and tree element selection
 graph = WrapperGraph(mainWin)
 
 mainWin.geometry('651x700+51+51')
 mainWin.wm_title('')
 
 mainWin.mainloop()
-
-
-
