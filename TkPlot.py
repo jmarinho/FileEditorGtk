@@ -19,9 +19,9 @@ class WrapperGraph(Frame):
     def __init__(self, mainWindow):
         self.mainWindow = mainWindow
 
-        self.TreeSelector = WidgetTreeViewTk.WidgetTreeViewTk(mainWindow)
         self.graphFrame = Frame(mainWindow)
         self.graphFrame.pack()
+        self.TreeSelector = WidgetTreeViewTk.WidgetTreeViewTk(self.graphFrame)
         self.nameList, self.dataList = self.openFile("plotInput.json") 
         self.graph = PlotGraph.PlotGraph(self.graphFrame)
         self.graph.setData(self.dataList)
@@ -57,6 +57,8 @@ class WrapperGraph(Frame):
     def openFile(self, json_file_name):
 
         inputData = json.load(open(json_file_name, "r"))
+
+        self.TreeSelector.openDirectory([inputData['platform']])
 
         componentNames = inputData["traces"].keys()
 

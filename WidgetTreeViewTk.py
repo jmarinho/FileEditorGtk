@@ -5,21 +5,27 @@ import pdb
 
 class WidgetTreeViewTk:
     def __init__(self, parent):
-        self.treeView = ttk.Treeview(parent)
+        self.treeView = ttk.Treeview(parent )
 
-        self.treeView.pack(side = LEFT)
-        self.openDirectory()
-        self.listOfDevices = {}
+        self.testIcon = PhotoImage(file="icons/gears.gif")
+        self.treeView.pack(side = LEFT, expand = 1,fill=BOTH )
+
  
     def clickHandler(self, event):
         print self.treeView.focus()
  
 
-    def openDirectory(self, listOfDevices):
+    def childEntry(self, parent, currentLevel):
 
-        self.listOfDevices = listOfDevices
+        for elem in currentLevel:
 
-        parent = self.treeView.insert("","end", "widgets", text="inicial" )
-        self.treeView.insert(parent,0, "child1", text="child" )
-        self.treeView.tag_configure('ttk', background='yellow')
+            currentNode =  self.treeView.insert(parent, 0, parent+"/"+elem['name'], text=elem['name'], image=self.testIcon, open = 1 )
+            if elem['type'] == 'container':
+                self.childEntry(currentNode, elem['child'])
+
+    # listOfDevices contains a thieranrchy of dictionaries
+    # which represent the platform organization
+    def openDirectory(self, listOfDevices = {}):
+
+        self.childEntry("", listOfDevices)
         self.treeView.bind("<<TreeviewSelect>>", self.clickHandler)
