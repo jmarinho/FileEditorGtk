@@ -21,23 +21,36 @@ class WrapperGraph(Frame):
 
         self.graphFrame = Frame(mainWindow)
         self.graphFrame.pack()
-        self.TreeSelector = WidgetTreeViewTk.WidgetTreeViewTk(self.graphFrame)
+        self.TreeSelector = WidgetTreeViewTk.WidgetTreeViewTk(self)
         self.nameList, self.dataList = self.openFile("plotInput.json") 
+        self.subNameList = []
         self.graph = PlotGraph.PlotGraph(self.graphFrame)
         self.graph.setData(self.dataList)
 
-        self.handleResize()
-        
-    def handleResize(self):
         self.toggleFrame = Frame(self.graphFrame)
         self.toggleFrame.pack()
 
         self.buttonList = []
+
+        self.handleResize()
+
+       
+    def handleResize(self):
+
         self.checkerArray = {}
-        for nameElem in self.nameList:
+        
+        for button in self.buttonList:
+            button.grid_forget()
+#            button.update()
+ 
+        self.buttonList = []
+
+        for nameElem in self.subNameList:
             self.checkerArray[nameElem] = IntVar()
             self.buttonList.append(Checkbutton(self.toggleFrame, text=split(nameElem,"/")[-1],
                 command=self.handleToggle, variable=self.checkerArray[nameElem], offvalue=0, onvalue=1))
+            
+            self.buttonList[-1].toggle()
 
         indexR = 0
         indexC = 0
@@ -84,6 +97,11 @@ class WrapperGraph(Frame):
     def tupleToFloatArray(self, tupleVariable):
         return float(tupleVariable[0])
 
+    def reportNewObject(self, name):
+        self.subNameList = [subElem for subElem in self.nameList if name in subElem ]
+        self.updateToggleArray(self.subNameList)
+        self.handleResize()
+ 
     def updateToggleArray(self, nameList):
         self.graph.enableData(nameList)
 

@@ -3,6 +3,7 @@ import pdb
 from Tkinter import *
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+import numpy as np
 import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.figure import Figure
@@ -31,7 +32,7 @@ class PlotGraph:
         self.canvas = FigureCanvasTkAgg(self.figure, master=parentWindow)
         self.canvas.mpl_connect("pick_event", self.pickHandler)
         self.canvas.mpl_connect("motion_notify_event", self.motionHandler)
-        self.canvas.mpl_connect("scroll_event", self.scrollHandler)
+        self.scrollId = self.canvas.mpl_connect("scroll_event", self.scrollHandler)
         self.canvas.mpl_connect("button_press_event", self.buttonPressHandler)
         self.canvas.mpl_connect("button_release_event", self.buttonReleaseHandler)
         self.canvas.show()
@@ -42,18 +43,37 @@ class PlotGraph:
         self.zoomRectangle = self.subPlot.add_patch(patches.Rectangle( (0, 0), 1.0, 1.0,
             fill=False, visible=False, animated=False, zorder=100))
 
+        xArray = np.array([])
+        listToPlotX = []
+        listToPlotY = []
         for name in enabledArray:
             if name in self.dataList:
-                data = self.dataList[name] 
+                data = self.dataList[name]
+                listToPlotY.append(data.y)
+                listToPlotX.append(data.x)
+#                pdb.set_trace()
+                xArray = np.concatenate((xArray, data.x))
                 #self.subPlot.plot(data.x, data.y,linewidth=0.5, picker=True)
-                self.subPlot.stackplot(data.x, data.y)
+
+        xArray = np.unique(xArray)
+        xArray = np.sort(xArray)
+
+        for index,array in enumerate(listToPlotY):
+            listToPlotY[index] = np.interp(xArray, listToPlotX[index], listToPlotY[index])
+
+        if len(listToPlotY) > 0:
+            self.subPlot.stackplot(xArray, *listToPlotY, baseline="zero", linewidth=0.0, picker=True)
+#        X = np.arange(0, 10, 1) 
+#        Y = X + 5 * np.random.random((5, X.size))
+#        self.subPlot.stackplot(X, *Y)
+
         self.canvas.draw()
 
     def setData(self, dataList):
         self.dataList = dataList
 
     def motionHandler(self, mouseEvent):
-        #print "motion {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
+        print "motion {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
 
         if self.startX:
             self.zoomRectangle.set_width(mouseEvent.xdata - self.startX)
