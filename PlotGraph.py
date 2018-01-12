@@ -20,6 +20,7 @@ class PlotGraph:
         self.figure = Figure(dpi=100)
         self.subPlot = self.figure.add_subplot(111) # returns the axes
 
+
         # create rectangle patch to be used during zooms
         # leave it hidden and only set visible during zoom procedures
         self.zoomRectangle = self.subPlot.add_patch(patches.Rectangle( (0, 0), 1.0, 1.0,
@@ -37,6 +38,8 @@ class PlotGraph:
         self.canvas.mpl_connect("button_release_event", self.buttonReleaseHandler)
         self.canvas.show()
         self.canvas.get_tk_widget().pack( expand=1)
+       
+        self.annot = [] 
     
     def enableData(self, enabledArray):
         self.subPlot.cla()
@@ -44,45 +47,60 @@ class PlotGraph:
             fill=False, visible=False, animated=False, zorder=100))
 
         xArray = np.array([])
-        listToPlotX = []
-        listToPlotY = []
+        self.listToPlotX = []
+        self.listToPlotY = []
         for name in enabledArray:
             if name in self.dataList:
                 data = self.dataList[name]
-                listToPlotY.append(data.y)
-                listToPlotX.append(data.x)
-#                pdb.set_trace()
+                self.listToPlotY.append(data.y)
+                self.listToPlotX.append(data.x)
                 xArray = np.concatenate((xArray, data.x))
-                #self.subPlot.plot(data.x, data.y,linewidth=0.5, picker=True)
+
 
         xArray = np.unique(xArray)
         xArray = np.sort(xArray)
 
-        for index,array in enumerate(listToPlotY):
-            listToPlotY[index] = np.interp(xArray, listToPlotX[index], listToPlotY[index])
+        localListToPlotY = []
+        for index,array in enumerate(self.listToPlotY):
+            localListToPlotY.append( np.interp(xArray, self.listToPlotX[index], self.listToPlotY[index]))
 
-        if len(listToPlotY) > 0:
-            self.subPlot.stackplot(xArray, *listToPlotY, baseline="zero", linewidth=0.0, picker=True)
-#        X = np.arange(0, 10, 1) 
-#        Y = X + 5 * np.random.random((5, X.size))
-#        self.subPlot.stackplot(X, *Y)
+        if len(self.listToPlotY) > 0:
 
-        self.canvas.draw()
+            self.subPlot.stackplot(xArray, *localListToPlotY, baseline="zero", linewidth=0.0, picker=True)
+            bbox_props = dict(fc="white", ec="b", lw=0.1)
+            self.annot = self.subPlot.annotate("bla", bbox = bbox_props, fontsize=8, xy=(0,0), xytext=(0,0),textcoords="offset points")
+
+        self.canvas.draw_idle()
 
     def setData(self, dataList):
         self.dataList = dataList
+
+    def getAnotString(self, xCoord):
+        returnString = ""
+        for elemX, elemY in zip(self.listToPlotX, self.listToPlotY):
+            returnString += "{:.4f}".format(np.interp(xCoord, elemX, elemY))+"\n"
+        return returnString
 
     def motionHandler(self, mouseEvent):
         print "motion {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
 
         if self.startX:
+
             self.zoomRectangle.set_width(mouseEvent.xdata - self.startX)
             self.zoomRectangle.set_height(mouseEvent.ydata - self.startY)
 
-            self.canvas.draw()
+            self.canvas.draw_idle()
+
+        elif self.annot and mouseEvent.xdata and  mouseEvent.ydata:
+            print "change annotation"
+
+            self.annot.xy = (mouseEvent.xdata, 0)#mouseEvent.ydata)
+            self.annot.set_text(self.getAnotString(mouseEvent.xdata))
+            self.annot.set_visible(True)
+            self.canvas.draw_idle()
 
     def scrollHandler(self, mouseEvent):
-        print "scroll {0}, {1}, steps {2}".format(mouseEvent.xdata, mouseEvent.ydata, mouseEvent.step)
+        #print "scroll {0}, {1}, steps {2}".format(mouseEvent.xdata, mouseEvent.ydata, mouseEvent.step)
         zoomInRatio  = 0.9
         zoomOutRatio = 1.1
 
@@ -117,6 +135,7 @@ class PlotGraph:
         self.canvas.draw()
 
     def buttonPressHandler(self, mouseEvent):
+#        pdb.set_trace()
         self.startX = mouseEvent.xdata
         self.startY = mouseEvent.ydata
 
@@ -145,6 +164,6 @@ class PlotGraph:
 
         self.canvas.draw()
         self.mainWindow.config(cursor="arrow")
-
+        self.startX = []
     def pickHandler(self, mouseEvent):
         print "pick handler"

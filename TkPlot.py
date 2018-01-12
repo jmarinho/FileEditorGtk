@@ -20,7 +20,7 @@ class WrapperGraph(Frame):
         self.mainWindow = mainWindow
 
         self.graphFrame = Frame(mainWindow)
-        self.graphFrame.pack()
+        self.graphFrame.pack(expand=1)
         self.TreeSelector = WidgetTreeViewTk.WidgetTreeViewTk(self)
         self.nameList, self.dataList = self.openFile("plotInput.json") 
         self.subNameList = []
@@ -28,7 +28,7 @@ class WrapperGraph(Frame):
         self.graph.setData(self.dataList)
 
         self.toggleFrame = Frame(self.graphFrame)
-        self.toggleFrame.pack()
+        self.toggleFrame.pack(expand=1)
 
         self.buttonList = []
 
@@ -98,7 +98,11 @@ class WrapperGraph(Frame):
         return float(tupleVariable[0])
 
     def reportNewObject(self, name):
-        self.subNameList = [subElem for subElem in self.nameList if name in subElem ]
+        self.subNameList = [subElem for subElem in self.nameList if name in subElem and name != subElem ]
+
+        if len(self.subNameList) == 0:
+            self.subNameList = [name]
+
         self.updateToggleArray(self.subNameList)
         self.handleResize()
  
