@@ -9,6 +9,7 @@ matplotlib.use('TkAgg')
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+
 # Plot class
 # Responsible for 
 class PlotGraph:
@@ -19,7 +20,6 @@ class PlotGraph:
         ## Input file name just beng used for debug sake
         self.figure = Figure(dpi=100)
         self.subPlot = self.figure.add_subplot(111) # returns the axes
-
 
         # create rectangle patch to be used during zooms
         # leave it hidden and only set visible during zoom procedures
@@ -41,10 +41,12 @@ class PlotGraph:
        
         self.annot = [] 
     
-    def enableData(self, enabledArray):
+    def enableData(self, enabledArray, colorList):
         self.subPlot.cla()
         self.zoomRectangle = self.subPlot.add_patch(patches.Rectangle( (0, 0), 1.0, 1.0,
             fill=False, visible=False, animated=False, zorder=100))
+
+        numLines = len(enabledArray)
 
         xArray = np.array([])
         self.listToPlotX = []
@@ -56,7 +58,6 @@ class PlotGraph:
                 self.listToPlotX.append(data.x)
                 xArray = np.concatenate((xArray, data.x))
 
-
         xArray = np.unique(xArray)
         xArray = np.sort(xArray)
 
@@ -66,7 +67,7 @@ class PlotGraph:
 
         if len(self.listToPlotY) > 0:
 
-            self.subPlot.stackplot(xArray, *localListToPlotY, baseline="zero", linewidth=0.0, picker=True)
+            self.subPlot.stackplot(xArray, *localListToPlotY, colors = colorList, baseline="zero", linewidth=0.0, picker=True)
             bbox_props = dict(fc="white", ec="b", lw=0.1)
             self.annot = self.subPlot.annotate("bla", bbox = bbox_props, fontsize=8, xy=(0,0), xytext=(0,0),textcoords="offset points")
 

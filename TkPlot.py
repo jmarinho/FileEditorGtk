@@ -4,6 +4,7 @@ import PlotGraph
 import WidgetTreeViewTk 
 from string import *
 from Tkinter import *
+import numpy as np
 
 class Data:
     def __init__(self, name, x, y):
@@ -17,6 +18,7 @@ class Data:
 class WrapperGraph(Frame):
 
     def __init__(self, mainWindow):
+        self.colorList = []
         self.mainWindow = mainWindow
 
         self.graphFrame = Frame(mainWindow)
@@ -33,7 +35,6 @@ class WrapperGraph(Frame):
         self.buttonList = []
 
         self.handleResize()
-
        
     def handleResize(self):
 
@@ -41,14 +42,20 @@ class WrapperGraph(Frame):
         
         for button in self.buttonList:
             button.grid_forget()
-#            button.update()
  
         self.buttonList = []
 
+        index = 0
         for nameElem in self.subNameList:
+            color = self.colorList[index]
+            R = "{:02X}".format(int(color[0] * 255.0))
+            G = "{:02X}".format(int(color[1] * 255.0))
+            B = "{:02X}".format(int(color[2] * 255.0))
+            index += 1
             self.checkerArray[nameElem] = IntVar()
             self.buttonList.append(Checkbutton(self.toggleFrame, text=split(nameElem,"/")[-1],
-                command=self.handleToggle, variable=self.checkerArray[nameElem], offvalue=0, onvalue=1))
+                command=self.handleToggle, variable=self.checkerArray[nameElem], offvalue=0, onvalue=1,
+                selectcolor="#"+R+G+B))
             
             self.buttonList[-1].toggle()
 
@@ -100,21 +107,31 @@ class WrapperGraph(Frame):
     def reportNewObject(self, name):
         self.subNameList = [subElem for subElem in self.nameList if name in subElem and name != subElem ]
 
-        if len(self.subNameList) == 0:
+        self.colorList = []
+        nameListLen = len(self.subNameList)
+        if nameListLen == 0:
             self.subNameList = [name]
+            self.colorList = [(0,0,1)]
+        else:
+            self.colorList = [(1.0-x,x/2,x) for x in np.arange(0.1,1, 0.9/nameListLen)]
 
-        self.updateToggleArray(self.subNameList)
+        self.updateToggleArray(self.subNameList, self.colorList)
         self.handleResize()
  
-    def updateToggleArray(self, nameList):
-        self.graph.enableData(nameList)
+    def updateToggleArray(self, nameList, colorList):
+        self.graph.enableData(nameList, self.colorList)
 
     def handleToggle(self):
         enabledNames = []
+        partialColorList = []
+        index = 0
         for name, val in self.checkerArray.items():
             if val.get() == 1:
                 enabledNames.append(name)
-        self.graph.enableData(enabledNames)
+                partialColorList.append(self.colorList[index])
+            index += 1
+
+        self.graph.enableData(enabledNames, partialColorList)
 
 # Create Main Window
 mainWin = Tk()
