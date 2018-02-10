@@ -83,7 +83,7 @@ class WrapperGraph(Frame):
 
         componentNames = inputData["traces"].keys()
 
-        dataList ={} 
+        dataList = {} 
         nameList = []
         for components in componentNames:
             
@@ -139,8 +139,9 @@ mainWin = Tk()
 
 # The widget that wraps the main plotting widget,
 # plot selection buttons and tree element selection
-graph = WrapperGraph(mainWin)
 
-mainWin.geometry('651x700+51+51')
+mainWin.geometry("{0}x{1}+0+0".format(mainWin.winfo_screenwidth(), mainWin.winfo_screenheight()))
 mainWin.wm_title('')
+
+graph = WrapperGraph(mainWin)
 mainWin.mainloop()
