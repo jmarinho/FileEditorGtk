@@ -4,6 +4,7 @@ import PlotGraph
 import WidgetTreeViewTk 
 from string import *
 from Tkinter import *
+import ttk
 import numpy as np
 
 class Data:

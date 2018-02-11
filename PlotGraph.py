@@ -1,6 +1,7 @@
 import pdb
 
 from Tkinter import *
+import ttk
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
@@ -14,10 +15,15 @@ import bisect
 class PlotGraph:
 
     def __init__(self, parentWindow):
+        self.style = ttk.Style()
+        self.style.configure("BW.TLabel", foreground="black", background="white")
+
         self.mainWindow = parentWindow
-        
+       
+        self.mainNote = ttk.Notebook(parentWindow, style ="BW.TLabel")
+        self.mainNote.pack(fill=BOTH, expand=1) 
         ## Input file name just beng used for debug sake
-        self.figure = Figure(dpi=100)
+        self.figure = Figure(figsize=(25, 25), dpi=100)
         self.subPlot = self.figure.add_subplot(111) # returns the axes
 
         # create rectangle patch to be used during zooms
@@ -29,7 +35,13 @@ class PlotGraph:
         self.startY = 0
 
         # a tk.DrawingArea
-        self.canvas = FigureCanvasTkAgg(self.figure, master=parentWindow)
+        self.frame1 = ttk.Labelframe(self.mainNote, text='Power', width=100, height=100)
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.frame1)
+        self.mainNote.add(self.frame1, text="power")
+
+        self.frame2 = ttk.Frame(self.mainNote)
+        self.mainNote.insert("end", self.frame2)
+
         self.canvas.mpl_connect("pick_event", self.pickHandler)
         self.canvas.mpl_connect("motion_notify_event", self.motionHandler)
         self.scrollId = self.canvas.mpl_connect("scroll_event", self.scrollHandler)
