@@ -9,9 +9,7 @@ matplotlib.use('TkAgg')
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-
 # Plot class
-# Responsible for 
 class PlotGraph:
 
     def __init__(self, parentWindow):
@@ -71,7 +69,11 @@ class PlotGraph:
             bbox_props = dict(fc="white", ec="b", lw=0.1)
             self.annot = self.subPlot.annotate("bla", bbox = bbox_props, fontsize=8, xy=(0,0), xytext=(0,0),textcoords="offset points")
 
-        self.canvas.draw_idle()
+            self.canvas.draw()
+           
+            self.zoomXlims = self.subPlot.get_xlim() 
+            self.zoomYlims = self.subPlot.get_ylim() 
+            
 
     def setData(self, dataList):
         self.dataList = dataList
@@ -128,15 +130,19 @@ class PlotGraph:
             distYLow  *= zoomInRatio
             distYHigh *= zoomInRatio
 
-        xlim = (currX- distXLow, currX+distXHigh )
-        ylim = (currY- distYLow, currY+distYHigh )
+        minX = self.zoomXlims[0]
+        maxX = self.zoomXlims[1]
+        minY = self.zoomYlims[0]
+        maxY = self.zoomYlims[1]
+
+        xlim = (max(currX- distXLow, minX), min(currX+distXHigh, maxX) )
+        ylim = (max(currY- distYLow, minY), min(currY+distYHigh, maxY) )
 
         self.subPlot.set_xlim(xlim)
         self.subPlot.set_ylim(ylim)
         self.canvas.draw()
 
     def buttonPressHandler(self, mouseEvent):
-#        pdb.set_trace()
         self.startX = mouseEvent.xdata
         self.startY = mouseEvent.ydata
 
