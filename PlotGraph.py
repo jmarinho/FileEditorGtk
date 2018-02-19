@@ -85,12 +85,13 @@ class PlotGraph:
         return returnString
 
     def motionHandler(self, mouseEvent):
-        print "motion {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
+        #print "motion {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
 
         if self.startX:
 
-            self.zoomRectangle.set_width(mouseEvent.xdata - self.startX)
-            self.zoomRectangle.set_height(mouseEvent.ydata - self.startY)
+            if mouseEvent.xdata and mouseEvent.ydata:
+                self.zoomRectangle.set_width(mouseEvent.xdata - self.startX)
+                self.zoomRectangle.set_height(mouseEvent.ydata - self.startY)
 
             self.canvas.draw_idle()
 
