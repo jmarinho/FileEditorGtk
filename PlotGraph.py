@@ -8,6 +8,7 @@ import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import bisect
 
 # Plot class
 class PlotGraph:
@@ -22,7 +23,7 @@ class PlotGraph:
         # create rectangle patch to be used during zooms
         # leave it hidden and only set visible during zoom procedures
         self.zoomRectangle = self.subPlot.add_patch(patches.Rectangle( (0, 0), 1.0, 1.0,
-            fill=False, visible=False, animated=False, zorder=100))
+            fill=False, visible=False, animated=True, zorder=100))
 
         self.startX = 0
         self.startY = 0
@@ -37,12 +38,18 @@ class PlotGraph:
         self.canvas.show()
         self.canvas.get_tk_widget().pack( expand=1)
        
-        self.annot = [] 
     
+
     def enableData(self, enabledArray, colorList):
+
+        self.colorList = colorList
+        self.annot = [] 
+        self.stackPlotData = []
+        self.bboxList = []
+
         self.subPlot.cla()
         self.zoomRectangle = self.subPlot.add_patch(patches.Rectangle( (0, 0), 1.0, 1.0,
-            fill=False, visible=False, animated=False, zorder=100))
+            fill=False, visible=False, animated=False, antialiased = False, zorder=100))
 
         numLines = len(enabledArray)
 
@@ -59,29 +66,35 @@ class PlotGraph:
         xArray = np.unique(xArray)
         xArray = np.sort(xArray)
 
-        localListToPlotY = []
+        self.xArray = xArray
+
+        self.localListToPlotY = []
         for index,array in enumerate(self.listToPlotY):
-            localListToPlotY.append( np.interp(xArray, self.listToPlotX[index], self.listToPlotY[index]))
+            self.localListToPlotY.append( np.interp(xArray, self.listToPlotX[index], self.listToPlotY[index]))
 
         if len(self.listToPlotY) > 0:
 
-            self.subPlot.stackplot(xArray, *localListToPlotY, colors = colorList, baseline="zero", linewidth=0.0, picker=True)
-            bbox_props = dict(fc="white", ec="b", lw=0.1)
-            self.annot = self.subPlot.annotate("bla", bbox = bbox_props, fontsize=8, xy=(0,0), xytext=(0,0),textcoords="offset points")
+            self.subPlot.stackplot(xArray, *self.localListToPlotY, colors = colorList, baseline="zero", linewidth=0.0, picker=True, antialiased = False)
 
             self.canvas.draw()
            
             self.zoomXlims = self.subPlot.get_xlim() 
             self.zoomYlims = self.subPlot.get_ylim() 
+       
+        for index, elem in enumerate(self.listToPlotY):
             
+            bbox_props = dict(fc=self.colorList[index] , ec="b", lw=0.1)
+            self.bboxList.append(bbox_props)
+
+            self.annot.append(self.subPlot.annotate("bla", bbox = bbox_props, fontsize=10, xy=(0,0), xytext=(0,0),textcoords="offset points"))
 
     def setData(self, dataList):
         self.dataList = dataList
 
-    def getAnotString(self, xCoord):
+    def getAnotString(self, xCoord, YArray):
         returnString = ""
-        for elemX, elemY in zip(self.listToPlotX, self.listToPlotY):
-            returnString += "{:.4f}".format(np.interp(xCoord, elemX, elemY))+"\n"
+        
+        returnString += "{:.4f}".format(np.interp(xCoord, elemX, elemY))+"\n"
         return returnString
 
     def motionHandler(self, mouseEvent):
@@ -96,11 +109,26 @@ class PlotGraph:
             self.canvas.draw_idle()
 
         elif self.annot and mouseEvent.xdata and  mouseEvent.ydata:
-            print "change annotation"
 
-            self.annot.xy = (mouseEvent.xdata, 0)#mouseEvent.ydata)
-            self.annot.set_text(self.getAnotString(mouseEvent.xdata))
-            self.annot.set_visible(True)
+            # Motion event where the tooltips and the graph component description
+            # is presented
+
+            xIndex = bisect.bisect_left(self.xArray, mouseEvent.xdata)
+
+            cummYPos = 0
+            for index, elem in enumerate(self.annot): 
+                
+                yval = self.localListToPlotY[index][xIndex]
+                cummYPos += yval
+
+                
+                elem.xy = (mouseEvent.xdata, cummYPos)
+                
+                print "{} {}".format(elem.xy, elem.get_size())    
+                
+                elem.set_text("{:.4f}".format(yval))
+                elem.set_visible(True)
+
             self.canvas.draw_idle()
 
     def scrollHandler(self, mouseEvent):

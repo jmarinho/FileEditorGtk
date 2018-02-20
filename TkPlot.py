@@ -37,7 +37,7 @@ class WrapperGraph(Frame):
         self.handleResize()
        
     def handleResize(self):
-
+        print "RESIZE"
         self.checkerArray = {}
         
         for button in self.buttonList:
@@ -64,13 +64,13 @@ class WrapperGraph(Frame):
         for button in self.buttonList:
             button.grid(sticky = 'W', row = indexR, column = indexC)
             indexC += 1
+            button.update()
+            
+            #print button.winfo_width()
             if( indexC>3):
                 indexC = 0
                 indexR += 1
 
-        for button in self.buttonList:
-            button.update()
-            #print self.buttonList[-1].winfo_width()
 
         self.handleToggle()
 
@@ -142,5 +142,4 @@ graph = WrapperGraph(mainWin)
 
 mainWin.geometry('651x700+51+51')
 mainWin.wm_title('')
-
 mainWin.mainloop()
