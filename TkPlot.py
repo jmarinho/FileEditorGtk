@@ -23,58 +23,19 @@ class WrapperGraph(Frame):
         self.mainWindow = mainWindow
 
         self.graphFrame = Frame(mainWindow)
-        self.graphFrame.pack(expand=1)
+        self.graphFrame.pack(expand=0)
         self.TreeSelector = WidgetTreeViewTk.WidgetTreeViewTk(self)
-        self.nameList, self.dataList = self.openFile("plotInput.json") 
-        self.subNameList = []
         self.graph = PlotGraph.PlotGraph(self.graphFrame)
-        self.graph.setData(self.dataList)
-
-        self.toggleFrame = Frame(self.graphFrame)
-        self.toggleFrame.pack(expand=1)
-
-        self.buttonList = []
-
-        self.handleResize()
-       
-    def handleResize(self):
-        print "RESIZE"
-        self.checkerArray = {}
         
-        for button in self.buttonList:
-            button.grid_forget()
- 
-        self.buttonList = []
+        self.toggleFrame = Frame(self.graphFrame, width=25, height=10)
+        self.toggleFrame.grid_propagate(0)
+        self.toggleFrame.pack(fill=X, expand=1)
 
-        index = 0
-        for nameElem in self.subNameList:
-            color = self.colorList[index]
-            R = "{:02X}".format(int(color[0] * 255.0))
-            G = "{:02X}".format(int(color[1] * 255.0))
-            B = "{:02X}".format(int(color[2] * 255.0))
-            index += 1
-            self.checkerArray[nameElem] = IntVar()
-            self.buttonList.append(Checkbutton(self.toggleFrame, text=split(nameElem,"/")[-1],
-                command=self.handleToggle, variable=self.checkerArray[nameElem], offvalue=0, onvalue=1,
-                selectcolor="#"+R+G+B))
-            
-            self.buttonList[-1].toggle()
+        self.graph.handleResize()
 
-        indexR = 0
-        indexC = 0
-        for button in self.buttonList:
-            button.grid(sticky = 'W', row = indexR, column = indexC)
-            indexC += 1
-            button.update()
-            
-            #print button.winfo_width()
-            if( indexC>3):
-                indexC = 0
-                indexR += 1
-
-
-        self.handleToggle()
-
+        nameList, dataList = self.openFile("plotInput.json") 
+        self.graph.setData(nameList, dataList)
+       
     def openFile(self, json_file_name):
 
         inputData = json.load(open(json_file_name, "r"))
@@ -106,33 +67,8 @@ class WrapperGraph(Frame):
         return float(tupleVariable[0])
 
     def reportNewObject(self, name):
-        self.subNameList = [subElem for subElem in self.nameList if name in subElem and name != subElem ]
+        self.graph.reportNewObject(name)
 
-        self.colorList = []
-        nameListLen = len(self.subNameList)
-        if nameListLen == 0:
-            self.subNameList = [name]
-            self.colorList = [(0,0,1)]
-        else:
-            self.colorList = [(1.0-x,x/2,x) for x in np.arange(0.1,1, 0.9/nameListLen)]
-
-        self.updateToggleArray(self.subNameList, self.colorList)
-        self.handleResize()
- 
-    def updateToggleArray(self, nameList, colorList):
-        self.graph.enableData(nameList, self.colorList)
-
-    def handleToggle(self):
-        enabledNames = []
-        partialColorList = []
-        index = 0
-        for name, val in self.checkerArray.items():
-            if val.get() == 1:
-                enabledNames.append(name)
-                partialColorList.append(self.colorList[index])
-            index += 1
-
-        self.graph.enableData(enabledNames, partialColorList)
 
 # Create Main Window
 mainWin = Tk()

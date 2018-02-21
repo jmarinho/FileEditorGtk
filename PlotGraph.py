@@ -10,6 +10,7 @@ matplotlib.use('TkAgg')
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import bisect
+from string import *
 
 # Plot class
 class PlotGraph:
@@ -36,6 +37,16 @@ class PlotGraph:
 
         # a tk.DrawingArea
         self.frame1 = ttk.Labelframe(self.mainNote, text='Power', width=100, height=100)
+        self.subFrameGraph = ttk.Frame(self.frame1)
+
+        self.subFrameCheckButtons = ttk.Frame(self.frame1)
+        
+        #self.subFrameGraph.grid(row = 0, column = 0)
+        self.subFrameCheckButtons.pack(side=BOTTOM)
+        self.subFrameGraph.pack()
+        #self.subFrameCheckButtons.grid(row = 1, column = 0)
+
+        
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.frame1)
         self.mainNote.add(self.frame1, text="power")
 
@@ -48,13 +59,14 @@ class PlotGraph:
         self.canvas.mpl_connect("button_press_event", self.buttonPressHandler)
         self.canvas.mpl_connect("button_release_event", self.buttonReleaseHandler)
         self.canvas.show()
-        self.canvas.get_tk_widget().pack( expand=1)
-       
-    
+        self.canvas.get_tk_widget().pack(expand=1)
+        
+        self.buttonList = []
+        self.subNameList = []
 
     def enableData(self, enabledArray, colorList):
 
-        self.colorList = colorList
+        self.PartialColorList = colorList
         self.annot = [] 
         self.stackPlotData = []
         self.bboxList = []
@@ -95,12 +107,13 @@ class PlotGraph:
        
         for index, elem in enumerate(self.listToPlotY):
             
-            bbox_props = dict(fc=self.colorList[index] , ec="b", lw=0.1)
+            bbox_props = dict(fc=self.PartialColorList[index] , ec="b", lw=0.1)
             self.bboxList.append(bbox_props)
 
             self.annot.append(self.subPlot.annotate("bla", bbox = bbox_props, fontsize=10, xy=(0,0), xytext=(0,0),textcoords="offset points"))
 
-    def setData(self, dataList):
+    def setData(self, nameList, dataList):
+        self.nameList = nameList
         self.dataList = dataList
 
     def getAnotString(self, xCoord, YArray):
@@ -132,11 +145,10 @@ class PlotGraph:
                 
                 yval = self.localListToPlotY[index][xIndex]
                 cummYPos += yval
-
                 
                 elem.xy = (mouseEvent.xdata, cummYPos)
                 
-                print "{} {}".format(elem.xy, elem.get_size())    
+                #print "{} {}".format(elem.xy, elem.get_size())    
                 
                 elem.set_text("{:.4f}".format(yval))
                 elem.set_visible(True)
@@ -213,5 +225,73 @@ class PlotGraph:
         self.canvas.draw()
         self.mainWindow.config(cursor="arrow")
         self.startX = []
+
     def pickHandler(self, mouseEvent):
         print "pick handler"
+
+    def handleResize(self):
+        print "RESIZE"
+        self.checkerArray = {}
+        
+        for button in self.buttonList:
+            button.grid_forget()
+ 
+        self.buttonList = []
+
+        index = 0
+        for nameElem in self.subNameList:
+            color = self.colorList[index]
+            R = "{:02X}".format(int(color[0] * 255.0))
+            G = "{:02X}".format(int(color[1] * 255.0))
+            B = "{:02X}".format(int(color[2] * 255.0))
+            index += 1
+            self.checkerArray[nameElem] = IntVar()
+            self.buttonList.append(Checkbutton(self.subFrameCheckButtons, text=split(nameElem,"/")[-1],
+                command=self.handleToggle, variable=self.checkerArray[nameElem], offvalue=0, onvalue=1,
+                selectcolor="#"+R+G+B))
+            
+            self.buttonList[-1].toggle()
+
+        indexR = 0
+        indexC = 0
+        for button in self.buttonList:
+            button.grid(sticky = 'W', row = indexR, column = indexC)
+            indexC += 1
+            #button.update()
+            
+            #print button.winfo_width()
+            if( indexC>7):
+                indexC = 0
+                indexR += 1
+
+        self.handleToggle()
+
+    def handleToggle(self):
+        enabledNames = []
+        partialColorList = []
+        index = 0
+        for name, val in self.checkerArray.items():
+            if val.get() == 1:
+                enabledNames.append(name)
+                partialColorList.append(self.colorList[index])
+            index += 1
+
+        self.enableData(enabledNames, partialColorList)
+
+    def reportNewObject(self, name):
+        self.subNameList = [subElem for subElem in self.nameList if name in subElem and name != subElem ]
+
+        self.colorList = []
+        nameListLen = len(self.subNameList)
+        if nameListLen == 0:
+            self.subNameList = [name]
+            self.colorList = [(0,0,1)]
+        else:
+            self.colorList = [(1.0-x,x/2,x) for x in np.arange(0.1,1, 0.9/nameListLen)]
+
+        self.updateToggleArray(self.subNameList, self.colorList)
+        self.handleResize()
+
+    def updateToggleArray(self, nameList, colorList):
+        self.enableData(nameList, self.colorList)
+
