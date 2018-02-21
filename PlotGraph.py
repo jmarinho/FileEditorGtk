@@ -11,6 +11,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import bisect
 from string import *
+from matplotlib.text import OffsetFrom
 
 # Plot class
 class PlotGraph:
@@ -45,7 +46,6 @@ class PlotGraph:
         self.subFrameCheckButtons.pack(side=BOTTOM)
         self.subFrameGraph.pack()
         #self.subFrameCheckButtons.grid(row = 1, column = 0)
-
         
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.frame1)
         self.mainNote.add(self.frame1, text="power")
@@ -110,7 +110,7 @@ class PlotGraph:
             bbox_props = dict(fc=self.PartialColorList[index] , ec="b", lw=0.1)
             self.bboxList.append(bbox_props)
 
-            self.annot.append(self.subPlot.annotate("bla", bbox = bbox_props, fontsize=10, xy=(0,0), xytext=(0,0),textcoords="offset points"))
+            self.annot.append(self.subPlot.annotate("bla", xytext=(0, 0), arrowprops=dict(facecolor='black', shrink=0.05), bbox = bbox_props, fontsize=10, xy=(0,0), textcoords="offset points"))
 
     def setData(self, nameList, dataList):
         self.nameList = nameList
@@ -134,24 +134,35 @@ class PlotGraph:
             self.canvas.draw_idle()
 
         elif self.annot and mouseEvent.xdata and  mouseEvent.ydata:
-
+            textSize = 15
             # Motion event where the tooltips and the graph component description
             # is presented
 
             xIndex = bisect.bisect_left(self.xArray, mouseEvent.xdata)
 
             cummYPos = 0
+            pastYTop = 0
+
+            pastAnnot = None
             for index, elem in enumerate(self.annot): 
-                
+
+
                 yval = self.localListToPlotY[index][xIndex]
                 cummYPos += yval
-                
+             
+                pastYBottom = max( pastYTop, cummYPos)
+                pastYTop = pastYBottom
+
+
+                if pastAnnot:
+                    elem.textcoords = OffsetFrom(pastAnnot, (0,2))
+
                 elem.xy = (mouseEvent.xdata, cummYPos)
-                
-                #print "{} {}".format(elem.xy, elem.get_size())    
-                
-                elem.set_text("{:.4f}".format(yval))
+                 
+                elem.set_text("{:.4f} {}".format(yval, self.nameList[index]))
                 elem.set_visible(True)
+
+                pastAnnot = elem
 
             self.canvas.draw_idle()
 
