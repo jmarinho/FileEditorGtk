@@ -12,6 +12,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import bisect
 from string import *
 from matplotlib.text import OffsetFrom
+from matplotlib.offsetbox import  DrawingArea, AnnotationBbox
 
 # Plot class
 class PlotGraph:
@@ -110,7 +111,7 @@ class PlotGraph:
             bbox_props = dict(fc=self.PartialColorList[index] , ec="b", lw=0.1)
             self.bboxList.append(bbox_props)
 
-            self.annot.append(self.subPlot.annotate("bla", xytext=(0, 0), arrowprops=dict(facecolor='black', shrink=0.05), bbox = bbox_props, fontsize=10, xy=(0,0), textcoords="offset points"))
+            self.annot.append(self.subPlot.annotate("bla", xytext=(0, 0), arrowprops=dict(facecolor='black', shrink=0.05), bbox = bbox_props, fontsize=10, xy=(0,0), textcoords="offset pixels"))
 
     def setData(self, nameList, dataList):
         self.nameList = nameList
@@ -146,16 +147,29 @@ class PlotGraph:
             pastAnnot = None
             for index, elem in enumerate(self.annot): 
 
-
                 yval = self.localListToPlotY[index][xIndex]
                 cummYPos += yval
              
                 pastYBottom = max( pastYTop, cummYPos)
                 pastYTop = pastYBottom
 
-
                 if pastAnnot:
-                    elem.textcoords = OffsetFrom(pastAnnot, (0,2))
+                    elem.textcoords = OffsetFrom(pastAnnot, (0,1.5))
+                else:
+                    elem.textcoords = OffsetFrom(self.subPlot, (mouseEvent.xdata/2, 0), unit="pixels" )
+                    print mouseEvent.xdata
+
+                radius = 1
+                da = DrawingArea(100*2*radius, 100*2*radius, 0, 0)
+                cell_patch = patches.Circle(1, 
+                                     radius=radius, color='k', fill=True, ls='solid',clip_on=False)
+                da.add_artist(cell_patch)
+                ab = AnnotationBbox(da, xy=(mouseEvent.xdata,0),
+                        xycoords=("data", "axes fraction"),
+                        boxcoords=("data", "axes fraction"),
+                        box_alignment=(0.5,0.5), frameon=False)
+
+                self.subPlot.add_artist(ab)
 
                 elem.xy = (mouseEvent.xdata, cummYPos)
                  
@@ -204,7 +218,7 @@ class PlotGraph:
 
         self.subPlot.set_xlim(xlim)
         self.subPlot.set_ylim(ylim)
-        self.canvas.draw()
+        self.canvas.draw_idle()
 
     def buttonPressHandler(self, mouseEvent):
         self.startX = mouseEvent.xdata
