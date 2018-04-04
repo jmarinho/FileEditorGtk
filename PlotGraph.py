@@ -22,7 +22,7 @@ class PlotGraph:
         self.style.configure("BW.TLabel", foreground="black", background="white")
 
         self.mainWindow = parentWindow
-       
+
         self.mainNote = ttk.Notebook(parentWindow, style ="BW.TLabel")
         self.mainNote.pack(fill=BOTH, expand=1) 
         ## Input file name just beng used for debug sake
@@ -42,12 +42,12 @@ class PlotGraph:
         self.subFrameGraph = ttk.Frame(self.frame1)
 
         self.subFrameCheckButtons = ttk.Frame(self.frame1)
-        
+
         #self.subFrameGraph.grid(row = 0, column = 0)
         self.subFrameCheckButtons.pack(side=BOTTOM)
         self.subFrameGraph.pack()
         #self.subFrameCheckButtons.grid(row = 1, column = 0)
-        
+
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.frame1)
         self.mainNote.add(self.frame1, text="power")
 
@@ -61,7 +61,7 @@ class PlotGraph:
         self.canvas.mpl_connect("button_release_event", self.buttonReleaseHandler)
         self.canvas.show()
         self.canvas.get_tk_widget().pack(expand=1)
-        
+
         self.buttonList = []
         self.subNameList = []
 
@@ -102,16 +102,27 @@ class PlotGraph:
             self.subPlot.stackplot(xArray, *self.localListToPlotY, colors = colorList, baseline="zero", linewidth=0.0, picker=True, antialiased = False)
 
             self.canvas.draw()
-           
+
             self.zoomXlims = self.subPlot.get_xlim() 
             self.zoomYlims = self.subPlot.get_ylim() 
-       
+
         for index, elem in enumerate(self.listToPlotY):
-            
+
             bbox_props = dict(fc=self.PartialColorList[index] , ec="b", lw=0.1)
             self.bboxList.append(bbox_props)
 
-            self.annot.append(self.subPlot.annotate("bla", xytext=(0, 0), arrowprops=dict(facecolor='black', shrink=0.05), bbox = bbox_props, fontsize=10, xy=(0,0), textcoords="offset pixels"))
+            #self.annot.append(self.subPlot.annotate("bla", xytext=(0, 0), arrowprops=dict(facecolor='black', shrink=0.05), bbox = bbox_props, fontsize=10, xy=(0,0), textcoords="offset pixels"))
+            self.annot.append(self.createBall())
+            
+
+    def createBall(self):
+        radius = 2
+        da = DrawingArea(radius, radius, 10, 10)
+        cell_patch = patches.Circle((0.0, 0.0), radius=radius, color='k', fill=True, ls='solid',clip_on=False)
+        da.add_artist(cell_patch)
+        ab = AnnotationBbox(da, xy=(mouseEvent.xdata,cummYPos), xycoords=("data", "data"), boxcoords=("data", "data"), box_alignment=(5.0,5.0), frameon=False)
+
+        return ab
 
     def setData(self, nameList, dataList):
         self.nameList = nameList
@@ -149,7 +160,7 @@ class PlotGraph:
 
                 yval = self.localListToPlotY[index][xIndex]
                 cummYPos += yval
-             
+
                 pastYBottom = max( pastYTop, cummYPos)
                 pastYTop = pastYBottom
 
@@ -159,20 +170,9 @@ class PlotGraph:
                     elem.textcoords = OffsetFrom(self.subPlot, (mouseEvent.xdata/2, 0), unit="pixels" )
                     print mouseEvent.xdata
 
-                radius = 1
-                da = DrawingArea(100*2*radius, 100*2*radius, 0, 0)
-                cell_patch = patches.Circle(1, 
-                                     radius=radius, color='k', fill=True, ls='solid',clip_on=False)
-                da.add_artist(cell_patch)
-                ab = AnnotationBbox(da, xy=(mouseEvent.xdata,0),
-                        xycoords=("data", "axes fraction"),
-                        boxcoords=("data", "axes fraction"),
-                        box_alignment=(0.5,0.5), frameon=False)
-
-                self.subPlot.add_artist(ab)
 
                 elem.xy = (mouseEvent.xdata, cummYPos)
-                 
+
                 elem.set_text("{:.4f} {}".format(yval, self.nameList[index]))
                 elem.set_visible(True)
 
