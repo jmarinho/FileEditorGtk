@@ -7,6 +7,9 @@ from Tkinter import *
 import ttk
 import numpy as np
 
+class listFiles:
+    pass
+    
 class Data:
     def __init__(self, name, x, y):
         self.name = name
@@ -19,8 +22,15 @@ class Data:
 class WrapperGraph(Frame):
 
     def __init__(self, mainWindow):
+
         self.colorList = []
         self.mainWindow = mainWindow
+
+        menu = Menu(mainWindow)
+        fileList = Menu(menu)
+        menu.add_cascade(label="Load Results", menu=fileList)
+        mainWin.config(menu=menu)
+
 
         self.graphFrame = Frame(mainWindow)
         self.graphFrame.pack(expand=0)
