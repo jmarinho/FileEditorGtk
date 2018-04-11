@@ -188,14 +188,15 @@ class PlotGraph:
                 pastYTop = pastYBottom
 
                 elem.xytext = (mouseEvent.xdata, cummYPos)
+                elem.xybox = (mouseEvent.xdata, cummYPos)
 
                 legendText += "{:.4f} {}\n".format(yval, self.nameList[index])
-                self.legendArea.xy = (mouseEvent.xdata, cummYPos)
-                self.legendArea.xytext = (mouseEvent.xdata+0.1, 0.1)
 
                 pastAnnot = elem
 
             self.legend.set_text(legendText)
+            self.legendArea.xybox = (mouseEvent.xdata+0.1, 0.1)
+            self.legendArea.xytext = (mouseEvent.xdata+0.1, 0.1)
             self.legendArea.set_visible(True)
             self.canvas.draw_idle()
 
