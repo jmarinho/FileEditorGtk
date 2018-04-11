@@ -12,7 +12,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import bisect
 from string import *
 from matplotlib.text import OffsetFrom
-from matplotlib.offsetbox import  DrawingArea, AnnotationBbox
+from matplotlib.offsetbox import  DrawingArea, AnnotationBbox, TextArea
+from matplotlib import colors as mcolors
 
 # Plot class
 class PlotGraph:
@@ -22,9 +23,10 @@ class PlotGraph:
         self.style.configure("BW.TLabel", foreground="black", background="white")
 
         self.mainWindow = parentWindow
+        self.mainNote   = parentWindow
 
-        self.mainNote = ttk.Notebook(parentWindow, style ="BW.TLabel")
-        self.mainNote.pack(fill=BOTH, expand=1) 
+        #self.mainNote = ttk.Notebook(parentWindow, style ="BW.TLabel")
+        #self.mainNote.pack(fill=BOTH, expand=1) 
         ## Input file name just beng used for debug sake
         self.figure = Figure(figsize=(25, 25), dpi=100)
         self.subPlot = self.figure.add_subplot(111) # returns the axes
@@ -111,16 +113,36 @@ class PlotGraph:
             bbox_props = dict(fc=self.PartialColorList[index] , ec="b", lw=0.1)
             self.bboxList.append(bbox_props)
 
-            #self.annot.append(self.subPlot.annotate("bla", xytext=(0, 0), arrowprops=dict(facecolor='black', shrink=0.05), bbox = bbox_props, fontsize=10, xy=(0,0), textcoords="offset pixels"))
-            self.annot.append(self.createBall())
-            
+            annot = self.createBall(self.PartialColorList[index])
+            self.annot.append(annot)
+            self.subPlot.add_artist(annot)
 
-    def createBall(self):
+        self.legend, self.legendArea = self.createLabelSquare()
+        self.subPlot.add_artist(self.legendArea)
+
+    def createLabelSquare(self):
+
+        ta = TextArea("Test 1", minimumdescent=False)
+        ab = AnnotationBbox(ta, xy=(0,0), xybox=(1.02, 1), 
+                xycoords=("data", "axes fraction"), boxcoords=("data", "axes fraction"), box_alignment=(0,0), 
+                frameon=True )
+        ab.set_visible(False)
+
+        #ab = AnnotationBbox(ta, xy=(1,1),
+        #                xybox=(1.02, 1),
+        #                xycoords='data',
+        #                boxcoords=("data", "axes fraction"),
+        #                box_alignment=(0., 0.0),
+        #                arrowprops=dict(arrowstyle="->"), )
+        return ta, ab
+
+    def createBall(self, colour):
+
         radius = 2
         da = DrawingArea(radius, radius, 10, 10)
-        cell_patch = patches.Circle((0.0, 0.0), radius=radius, color='k', fill=True, ls='solid',clip_on=False)
-        da.add_artist(cell_patch)
-        ab = AnnotationBbox(da, xy=(mouseEvent.xdata,cummYPos), xycoords=("data", "data"), boxcoords=("data", "data"), box_alignment=(5.0,5.0), frameon=False)
+        circle = patches.Circle((0.0, 0.0), radius=radius, edgecolor='k', facecolor=colour, fill=True, ls='solid',clip_on=False)
+        da.add_artist(circle)
+        ab = AnnotationBbox(da, xy=(0,0), xycoords=("data", "data"), boxcoords=("data", "data"), box_alignment=(5.0,5.0), frameon=False)
 
         return ab
 
@@ -156,28 +178,25 @@ class PlotGraph:
             pastYTop = 0
 
             pastAnnot = None
+            legendText = ""
             for index, elem in enumerate(self.annot): 
 
                 yval = self.localListToPlotY[index][xIndex]
                 cummYPos += yval
 
-                pastYBottom = max( pastYTop, cummYPos)
+                pastYBottom = max(pastYTop, cummYPos)
                 pastYTop = pastYBottom
 
-                if pastAnnot:
-                    elem.textcoords = OffsetFrom(pastAnnot, (0,1.5))
-                else:
-                    elem.textcoords = OffsetFrom(self.subPlot, (mouseEvent.xdata/2, 0), unit="pixels" )
-                    print mouseEvent.xdata
+                elem.xytext = (mouseEvent.xdata, cummYPos)
 
-
-                elem.xy = (mouseEvent.xdata, cummYPos)
-
-                elem.set_text("{:.4f} {}".format(yval, self.nameList[index]))
-                elem.set_visible(True)
+                legendText += "{:.4f} {}\n".format(yval, self.nameList[index])
+                self.legendArea.xy = (mouseEvent.xdata, cummYPos)
+                self.legendArea.xytext = (mouseEvent.xdata+0.1, 0.1)
 
                 pastAnnot = elem
 
+            self.legend.set_text(legendText)
+            self.legendArea.set_visible(True)
             self.canvas.draw_idle()
 
     def scrollHandler(self, mouseEvent):
@@ -312,7 +331,7 @@ class PlotGraph:
             self.subNameList = [name]
             self.colorList = [(0,0,1)]
         else:
-            self.colorList = [(1.0-x,x/2,x) for x in np.arange(0.1,1, 0.9/nameListLen)]
+            self.colorList = [(1.0-x, x/3, x) for x in np.arange(0.1,1, 0.9/nameListLen)]
 
         self.updateToggleArray(self.subNameList, self.colorList)
         self.handleResize()

@@ -48,7 +48,7 @@ class FileList(Gtk.TreeView):
                 fileIter = fileList.append(parent,[lbl])
                 pathStr = fileList.get_string_from_iter(fileIter)
                 self.fileTable[pathStr] = os.path.join(root, name)
-                print (os.path.join(root, name))
+                #print (os.path.join(root, name))
 
             for name in dirs:
                 
@@ -61,7 +61,7 @@ class FileList(Gtk.TreeView):
                 thisDir = fileList.append(parent,[lbl])
                 indexStr = os.path.join(root, name)
                 dirHash[indexStr] = thisDir
-                print (os.path.join(root, name))
+                #print (os.path.join(root, name))
 
         self.connect('row-activated', self.buttonCallback)
 

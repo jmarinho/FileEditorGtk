@@ -6,10 +6,9 @@ from string import *
 from Tkinter import *
 import ttk
 import numpy as np
+import os
+import tkFileDialog
 
-class listFiles:
-    pass
-    
 class Data:
     def __init__(self, name, x, y):
         self.name = name
@@ -19,7 +18,17 @@ class Data:
         self.dataXRange = [float(min(self.x)), float(max(self.x))]
         self.dataYRange = [float(min(self.y)), float(max(self.y))]
 
+def bogusPrint():
+
+    print "press menu" 
+
 class WrapperGraph(Frame):
+
+    def openFileDialog(self):
+        fileName = tkFileDialog.askopenfilename(initialdir = "output",title = "Select file",filetypes = (("json files","*.json"),("all files","*.*")))
+
+        nameList, dataList = self.openFile(fileName) 
+        self.graph.setData(nameList, dataList)
 
     def __init__(self, mainWindow):
 
@@ -28,14 +37,20 @@ class WrapperGraph(Frame):
 
         menu = Menu(mainWindow)
         fileList = Menu(menu)
-        menu.add_cascade(label="Load Results", menu=fileList)
-        mainWin.config(menu=menu)
 
+        dropDownList = menu.add_command(label="Open file dialog", command= self.openFileDialog)
+
+        mainWin.config(menu=menu)
 
         self.graphFrame = Frame(mainWindow)
         self.graphFrame.pack(expand=0)
         self.TreeSelector = WidgetTreeViewTk.WidgetTreeViewTk(self)
-        self.graph = PlotGraph.PlotGraph(self.graphFrame)
+
+        self.mainNote = ttk.Notebook(self.graphFrame, style ="BW.TLabel")
+        self.mainNote.pack(fill=BOTH, expand=1) 
+
+        #self.graph = PlotGraph.PlotGraph(self.graphFrame)
+        self.graph = PlotGraph.PlotGraph(self.mainNote)
         
         self.toggleFrame = Frame(self.graphFrame, width=25, height=10)
         self.toggleFrame.grid_propagate(0)
@@ -43,13 +58,14 @@ class WrapperGraph(Frame):
 
         self.graph.handleResize()
 
-        nameList, dataList = self.openFile("plotInput.json") 
-        self.graph.setData(nameList, dataList)
+        #nameList, dataList = self.openFile("plotInput.json") 
+        #self.graph.setData(nameList, dataList)
        
     def openFile(self, json_file_name):
 
         inputData = json.load(open(json_file_name, "r"))
 
+        self.TreeSelector.clear()
         self.TreeSelector.openDirectory([inputData['platform']])
 
         componentNames = inputData["traces"].keys()

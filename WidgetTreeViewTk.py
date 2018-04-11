@@ -41,3 +41,6 @@ class WidgetTreeViewTk:
 
         self.childEntry("", listOfDevices)
         self.treeView.bind("<<TreeviewSelect>>", self.clickHandler)
+
+    def clear(self):
+        self.treeView.delete(*self.treeView.get_children())
