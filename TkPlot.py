@@ -18,10 +18,6 @@ class Data:
         self.dataXRange = [float(min(self.x)), float(max(self.x))]
         self.dataYRange = [float(min(self.y)), float(max(self.y))]
 
-def bogusPrint():
-
-    print "press menu" 
-
 class WrapperGraph(Frame):
 
     def openFileDialog(self):
@@ -49,7 +45,6 @@ class WrapperGraph(Frame):
         self.mainNote = ttk.Notebook(self.graphFrame, style ="BW.TLabel")
         self.mainNote.pack(fill=BOTH, expand=1) 
 
-        #self.graph = PlotGraph.PlotGraph(self.graphFrame)
         self.graph = PlotGraph.PlotGraph(self.mainNote)
         
         self.toggleFrame = Frame(self.graphFrame, width=25, height=10)
@@ -58,9 +53,6 @@ class WrapperGraph(Frame):
 
         self.graph.handleResize()
 
-        #nameList, dataList = self.openFile("plotInput.json") 
-        #self.graph.setData(nameList, dataList)
-       
     def openFile(self, json_file_name):
 
         inputData = json.load(open(json_file_name, "r"))

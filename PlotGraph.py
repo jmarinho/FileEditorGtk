@@ -15,6 +15,8 @@ from matplotlib.text import OffsetFrom
 from matplotlib.offsetbox import  DrawingArea, AnnotationBbox, TextArea
 from matplotlib import colors as mcolors
 
+from colorList import colorPallete
+
 # Plot class
 class PlotGraph:
 
@@ -25,8 +27,6 @@ class PlotGraph:
         self.mainWindow = parentWindow
         self.mainNote   = parentWindow
 
-        #self.mainNote = ttk.Notebook(parentWindow, style ="BW.TLabel")
-        #self.mainNote.pack(fill=BOTH, expand=1) 
         ## Input file name just beng used for debug sake
         self.figure = Figure(figsize=(25, 25), dpi=100)
         self.subPlot = self.figure.add_subplot(111) # returns the axes
@@ -39,19 +39,19 @@ class PlotGraph:
         self.startX = 0
         self.startY = 0
 
-        # a tk.DrawingArea
         self.frame1 = ttk.Labelframe(self.mainNote, text='Power', width=100, height=100)
         self.subFrameGraph = ttk.Frame(self.frame1)
 
+        self.frame2 = ttk.Labelframe(self.mainNote, text='Advanced Plot', width=100, height=100)
+
         self.subFrameCheckButtons = ttk.Frame(self.frame1)
 
-        #self.subFrameGraph.grid(row = 0, column = 0)
         self.subFrameCheckButtons.pack(side=BOTTOM)
         self.subFrameGraph.pack()
-        #self.subFrameCheckButtons.grid(row = 1, column = 0)
 
         self.canvas = FigureCanvasTkAgg(self.figure, master=self.frame1)
         self.mainNote.add(self.frame1, text="power")
+        self.mainNote.add(self.frame2, text="Advanced Plot")
 
         self.frame2 = ttk.Frame(self.mainNote)
         self.mainNote.insert("end", self.frame2)
@@ -66,10 +66,12 @@ class PlotGraph:
 
         self.buttonList = []
         self.subNameList = []
-
+    
     def enableData(self, enabledArray, colorList):
 
+        self.PartialNameList = enabledArray
         self.PartialColorList = colorList
+
         self.annot = [] 
         self.stackPlotData = []
         self.bboxList = []
@@ -95,9 +97,29 @@ class PlotGraph:
 
         self.xArray = xArray
 
+        # Create functions defined at newXArray points from the prior X and Y arrays.
+        # The output functions all have the same size as newXArray
+        def createFuncAtX(newXArray, priorXArray, priorYArray):
+
+            indexPrior = 0
+            priorSize = len(priorXArray)
+
+            newYArray = [0]*len(newXArray)
+            #import pdb
+            #pdb.set_trace()
+
+            for indexNew, x in enumerate(newXArray):
+                while x > priorXArray[indexPrior] and indexPrior < priorSize:
+                    indexPrior+=1
+               
+                newYArray[indexNew] = priorYArray[max(indexPrior-1,0)]
+            return newYArray
+
+
         self.localListToPlotY = []
         for index,array in enumerate(self.listToPlotY):
-            self.localListToPlotY.append( np.interp(xArray, self.listToPlotX[index], self.listToPlotY[index]))
+            #self.localListToPlotY.append( np.interp(xArray, self.listToPlotX[index], self.listToPlotY[index]))
+            self.localListToPlotY.append( createFuncAtX(xArray, self.listToPlotX[index], self.listToPlotY[index]))
 
         if len(self.listToPlotY) > 0:
 
@@ -120,6 +142,19 @@ class PlotGraph:
         self.legend, self.legendArea = self.createLabelSquare()
         self.subPlot.add_artist(self.legendArea)
 
+    def getPlotXLim(self):
+        return self.subPlot.get_xlim()
+
+    def getPlotYLim(self):
+        return self.subPlot.get_ylim()
+
+    # helper method to determine if a point is inside the plot
+    def checkInsideDrawable(self, x, y):
+        xlim = self.getPlotXLim()
+        ylim = self.getPlotYLim()
+
+        return (x>min(xlim) and x<max(xlim) and y>min(ylim) and y<max(ylim))
+
     def createLabelSquare(self):
 
         ta = TextArea("Test 1", minimumdescent=False)
@@ -128,14 +163,9 @@ class PlotGraph:
                 frameon=True )
         ab.set_visible(False)
 
-        #ab = AnnotationBbox(ta, xy=(1,1),
-        #                xybox=(1.02, 1),
-        #                xycoords='data',
-        #                boxcoords=("data", "axes fraction"),
-        #                box_alignment=(0., 0.0),
-        #                arrowprops=dict(arrowstyle="->"), )
         return ta, ab
 
+    
     def createBall(self, colour):
 
         radius = 2
@@ -150,24 +180,17 @@ class PlotGraph:
         self.nameList = nameList
         self.dataList = dataList
 
+        # Open TopLevel component (graph holding all elements
+        # in the platform)
+        self.reportNewObject('TopLevel')
+
     def getAnotString(self, xCoord, YArray):
         returnString = ""
         
         returnString += "{:.4f}".format(np.interp(xCoord, elemX, elemY))+"\n"
         return returnString
 
-    def motionHandler(self, mouseEvent):
-        #print "motion {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
-
-        if self.startX:
-
-            if mouseEvent.xdata and mouseEvent.ydata:
-                self.zoomRectangle.set_width(mouseEvent.xdata - self.startX)
-                self.zoomRectangle.set_height(mouseEvent.ydata - self.startY)
-
-            self.canvas.draw_idle()
-
-        elif self.annot and mouseEvent.xdata and  mouseEvent.ydata:
+    def updateLegend(self, mouseEvent):
             textSize = 15
             # Motion event where the tooltips and the graph component description
             # is presented
@@ -181,24 +204,47 @@ class PlotGraph:
             legendText = ""
             for index, elem in enumerate(self.annot): 
 
-                yval = self.localListToPlotY[index][xIndex]
+                yval = np.interp(mouseEvent.xdata, self.xArray, self.localListToPlotY[index])
                 cummYPos += yval
 
+                                
+                # If the marker is not inside the plot limits then do not render it    
+                elem.set_visible(self.checkInsideDrawable(mouseEvent.xdata, cummYPos))
+                    
                 pastYBottom = max(pastYTop, cummYPos)
                 pastYTop = pastYBottom
-
                 elem.xytext = (mouseEvent.xdata, cummYPos)
-                elem.xybox = (mouseEvent.xdata, cummYPos)
+                elem.xybox  = (mouseEvent.xdata, cummYPos)
 
-                legendText += "{:.4f} {}\n".format(yval, self.nameList[index])
+                fullName = self.PartialNameList[index]
+                componentName = fullName.split('/')[-1]
+                legendText += "{:.4f} {}\n".format(yval, componentName)
 
                 pastAnnot = elem
 
             self.legend.set_text(legendText)
-            self.legendArea.xybox = (mouseEvent.xdata+0.1, 0.1)
-            self.legendArea.xytext = (mouseEvent.xdata+0.1, 0.1)
+
+            plotXLim = self.getPlotXLim()
+            plotCoordSize = plotXLim[1] - plotXLim[0]
+
+            self.legendArea.xybox = (mouseEvent.xdata+0.1*plotCoordSize, 0.1)
+            self.legendArea.xytext = (mouseEvent.xdata+0.1*plotCoordSize, 0.1)
             self.legendArea.set_visible(True)
             self.canvas.draw_idle()
+
+    def motionHandler(self, mouseEvent):
+        #print "motion {0}, {1}".format(mouseEvent.xdata, mouseEvent.ydata)
+
+        if self.startX:
+
+            if mouseEvent.xdata and mouseEvent.ydata:
+                self.zoomRectangle.set_width(mouseEvent.xdata - self.startX)
+                self.zoomRectangle.set_height(mouseEvent.ydata - self.startY)
+
+            self.canvas.draw_idle()
+
+        elif self.annot and mouseEvent.xdata and  mouseEvent.ydata:
+            self.updateLegend(mouseEvent)
 
     def scrollHandler(self, mouseEvent):
         #print "scroll {0}, {1}, steps {2}".format(mouseEvent.xdata, mouseEvent.ydata, mouseEvent.step)
@@ -238,7 +284,10 @@ class PlotGraph:
 
         self.subPlot.set_xlim(xlim)
         self.subPlot.set_ylim(ylim)
-        self.canvas.draw_idle()
+
+        if self.annot and mouseEvent.xdata and  mouseEvent.ydata:
+            self.updateLegend(mouseEvent)
+
 
     def buttonPressHandler(self, mouseEvent):
         self.startX = mouseEvent.xdata
@@ -302,9 +351,7 @@ class PlotGraph:
         for button in self.buttonList:
             button.grid(sticky = 'W', row = indexR, column = indexC)
             indexC += 1
-            #button.update()
             
-            #print button.winfo_width()
             if( indexC>7):
                 indexC = 0
                 indexR += 1
@@ -324,16 +371,20 @@ class PlotGraph:
         self.enableData(enabledNames, partialColorList)
 
     def reportNewObject(self, name):
-        self.subNameList = [subElem for subElem in self.nameList if name in subElem and name != subElem ]
+
+        subName = name.split('/')[-1]
+        #self.subNameList = [subElem for subElem in self.nameList if name in subElem and name != subElem.split('/')[-1] ]
+        self.subNameList = [subElem for subElem in self.nameList if subName == subElem.split('/')[-2] ]
 
         self.colorList = []
         nameListLen = len(self.subNameList)
         if nameListLen == 0:
             self.subNameList = [name]
-            self.colorList = [(0,0,1)]
+            self.colorList = [(0.9,0.5,0.3)]
         else:
-            self.colorList = [(1.0-x, x/3, x) for x in np.arange(0.1,1, 0.9/nameListLen)]
-
+            self.colorList = [(1.0-x, (x*55)%1.0, (x*33) %1.0) for x in np.arange(0.1,1, 0.9/nameListLen)]
+            #self.colorList = colorPallete
+ 
         self.updateToggleArray(self.subNameList, self.colorList)
         self.handleResize()
 

@@ -19,8 +19,6 @@ class WidgetTreeViewTk:
  
     def clickHandler(self, event):
         self.callbackParent.reportNewObject(self.treeView.focus())
-#        print self.treeView.focus()
- 
 
     def childEntry(self, parent, currentLevel):
 
@@ -30,13 +28,12 @@ class WidgetTreeViewTk:
             if elem['type'] == 'container' or elem['type'] == "platform":
                 self.childEntry(currentNode, elem['child'])
 
-    # listOfDevices contains a thieranrchy of dictionaries
+    # listOfDevices contains a hierarchy of dictionaries
     # which represent the platform organization
     def openDirectory(self, listOfDevices = {}):
 
         # Dirty hack to get the platform element display to conform
         listOfDevices[0]['type'] = "platform"
-#        listOfDevices[0]['name'] = "Platform"
         # end of hack
 
         self.childEntry("", listOfDevices)
