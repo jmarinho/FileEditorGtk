@@ -25,7 +25,6 @@ class PlotGraph:
         self.style.configure("BW.TLabel", foreground="black", background="white")
 
         self.mainWindow = parentWindow
-        self.mainNote   = parentWindow
 
         ## Input file name just beng used for debug sake
         self.figure = Figure(figsize=(25, 25), dpi=100)
@@ -39,22 +38,14 @@ class PlotGraph:
         self.startX = 0
         self.startY = 0
 
-        self.frame1 = ttk.Labelframe(self.mainNote, text='Power', width=100, height=100)
-        self.subFrameGraph = ttk.Frame(self.frame1)
-
-        self.frame2 = ttk.Labelframe(self.mainNote, text='Advanced Plot', width=100, height=100)
-
-        self.subFrameCheckButtons = ttk.Frame(self.frame1)
+        self.subFrameCheckButtons = ttk.Frame(self.mainWindow)
 
         self.subFrameCheckButtons.pack(side=BOTTOM)
+        self.subFrameGraph = ttk.Frame(self.mainWindow)
         self.subFrameGraph.pack()
 
-        self.canvas = FigureCanvasTkAgg(self.figure, master=self.frame1)
-        self.mainNote.add(self.frame1, text="power")
-        self.mainNote.add(self.frame2, text="Advanced Plot")
+        self.canvas = FigureCanvasTkAgg(self.figure, master=self.mainWindow)
 
-        self.frame2 = ttk.Frame(self.mainNote)
-        self.mainNote.insert("end", self.frame2)
 
         self.canvas.mpl_connect("pick_event", self.pickHandler)
         self.canvas.mpl_connect("motion_notify_event", self.motionHandler)

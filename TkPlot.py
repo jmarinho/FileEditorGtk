@@ -45,7 +45,16 @@ class WrapperGraph(Frame):
         self.mainNote = ttk.Notebook(self.graphFrame, style ="BW.TLabel")
         self.mainNote.pack(fill=BOTH, expand=1) 
 
-        self.graph = PlotGraph.PlotGraph(self.mainNote)
+        # Create the several graph 
+        self.frame1 = ttk.Labelframe(self.mainNote, text='Power', width=100, height=100)
+
+        self.frame2 = ttk.Labelframe(self.mainNote, text='Advanced Plot', width=100, height=100)
+        self.mainNote.add(self.frame1, text="power")
+        self.mainNote.add(self.frame2, text="Advanced Plot")
+        self.frame2 = ttk.Frame(self.mainNote)
+        self.mainNote.insert("end", self.frame2)
+
+        self.graph = PlotGraph.PlotGraph(self.frame1)
         
         self.toggleFrame = Frame(self.graphFrame, width=25, height=10)
         self.toggleFrame.grid_propagate(0)
@@ -93,9 +102,10 @@ mainWin = Tk()
 
 # The widget that wraps the main plotting widget,
 # plot selection buttons and tree element selection
-
 mainWin.geometry("{0}x{1}+0+0".format(mainWin.winfo_screenwidth(), mainWin.winfo_screenheight()))
 mainWin.wm_title('')
 
+
 graph = WrapperGraph(mainWin)
+
 mainWin.mainloop()
